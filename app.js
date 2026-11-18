@@ -22,3 +22,29 @@ $('art').addEventListener('pointermove',e=>{if(!drawMode||activePointer!==e.poin
 function finishStroke(e){if(activePointer===e.pointerId){activePointer=null;activeStroke=null}}
 $('art').addEventListener('pointerup',finishStroke);$('art').addEventListener('pointercancel',finishStroke);
 modeUI();
+
+/* Age-adaptive, ad-free learning games. All questions are local and require no accounts. */
+let age=3,questionNumber=0,currentQuestion=null;
+try{const a=Number(localStorage.getItem('gongbu_age'));if([3,5,6].includes(a))age=a}catch{}
+const objects=[['rabbit','🐰','토끼'],['butterfly','🦋','나비'],['car','🚗','자동차'],['train','🚆','기차'],['bus','🚌','버스'],['firetruck','🚒','소방차'],['airplane','✈️','비행기']];
+const colorNames=[['빨간색','🔴'],['노란색','🟡'],['파란색','🔵'],['초록색','🟢'],['보라색','🟣'],['주황색','🟠']];
+function questionBank(){
+ if(age===3)return [
+ ...colorNames.map(([name,emoji],i)=>({prompt:name+'을 찾아봐!',choices:[emoji,colorNames[(i+2)%6][1],colorNames[(i+4)%6][1]],answer:emoji})),
+ ...objects.slice(0,5).map(([k,e,n],i)=>({prompt:n+'는 어디 있을까?',choices:[e,objects[(i+2)%7][1],objects[(i+4)%7][1]],answer:e}))
+ ];
+ if(age===5)return [
+ ...objects.map(([k,e,n],i)=>({prompt:n+'를 골라봐!',choices:[e,objects[(i+2)%7][1],objects[(i+4)%7][1]],answer:e})),
+ ...[1,2,3,4,5].map(n=>({prompt:'별이 '+n+'개인 것은?',choices:['⭐'.repeat(n),'⭐'.repeat(n===5?2:n+1),'⭐'.repeat(n===1?3:n-1)],answer:'⭐'.repeat(n)})),
+ ...[['동그라미','🔴','🟦','🔺'],['세모','🔺','🔴','🟦'],['네모','🟦','🔺','🔴']].map(x=>({prompt:x[0]+'를 찾아봐!',choices:x.slice(1),answer:x[1]}))
+ ];
+ return [
+ ...[1,2,3,4,5].map(n=>({prompt:n+' + 1 = ?',choices:[String(n+1),String(n),String(n+2)],answer:String(n+1)})),
+ ...[2,3,4,5,6].map(n=>({prompt:n+' - 1 = ?',choices:[String(n-1),String(n),String(n-2)],answer:String(n-1)})),
+ ...objects.map(([k,e,n],i)=>({prompt:e+' 이름은 무엇일까?',choices:[n,objects[(i+2)%7][2],objects[(i+4)%7][2]],answer:n}))
+ ];
+}
+function newQuestion(){const bank=questionBank();currentQuestion=bank[questionNumber%bank.length];questionNumber++;$('learningTitle').textContent=age===3?'🐣 색깔·그림 놀이':age===5?'🌱 숫자·모양 놀이':'⭐ 생각하는 놀이';$('learningPrompt').textContent=currentQuestion.prompt;$('learningResult').textContent='';const choices=[...currentQuestion.choices];const rotation=questionNumber%choices.length;choices.push(...choices.splice(0,rotation));$('learningChoices').innerHTML='';for(const answer of choices){const b=document.createElement('button');b.textContent=answer;b.onclick=()=>{if(answer===currentQuestion.answer){$('learningResult').textContent='정답! 참 잘했어! 🎉';$('message').textContent='최고야! 🌟'}else{$('learningResult').textContent='다시 한번 골라볼까? 💛'}};$('learningChoices').appendChild(b)}}
+document.querySelectorAll('[data-age]').forEach(b=>b.onclick=()=>{age=Number(b.dataset.age);questionNumber=0;try{localStorage.setItem('gongbu_age',String(age))}catch{}document.querySelectorAll('[data-age]').forEach(x=>x.classList.toggle('selected',Number(x.dataset.age)===age));newQuestion()});
+document.querySelectorAll('[data-age]').forEach(x=>x.classList.toggle('selected',Number(x.dataset.age)===age));
+$('newQuestion').onclick=newQuestion;newQuestion();
