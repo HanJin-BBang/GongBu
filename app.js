@@ -38,6 +38,34 @@ moreArt.push(
 ['icecream','🍦 아이스크림','<path class="paint" data-part="cone" d="M132 187H268L200 337Z" fill="#fff"/><circle class="paint" data-part="scoop1" cx="157" cy="156" r="60" fill="#fff"/><circle class="paint" data-part="scoop2" cx="241" cy="156" r="60" fill="#fff"/><circle class="paint" data-part="scoop3" cx="200" cy="91" r="60" fill="#fff"/>']
 );
 for(const [key,label,markup] of moreArt){shapes[key]='<g class="moving bounce">'+markup+'</g>';paints[key]={}}
+
+/* Ninety additional scene compositions. Each combines a main illustration with
+   a distinct, separately colorable scene element and setting. */
+const sceneBases=[
+ ['rabbit','🐰 토끼'],['butterfly','🦋 나비'],['car','🚗 자동차'],['train','🚆 기차'],
+ ['bus','🚌 버스'],['firetruck','🚒 소방차'],['airplane','✈️ 비행기'],
+ ['cat','🐱 고양이'],['dog','🐶 강아지'],['bear','🐻 곰'],
+ ['fish','🐟 물고기'],['dinosaur','🦕 공룡'],['apple','🍎 사과'],
+ ['flower','🌸 꽃'],['tree','🌳 나무'],['house','🏠 집'],
+ ['truck','🚚 트럭'],['rocket','🚀 로켓']
+];
+const sceneStyles=[
+ {name:'햇님과',badge:'☀️',markup:'<circle class="paint" data-part="sun" cx="338" cy="51" r="34" fill="#fff"/>'},
+ {name:'구름과',badge:'☁️',markup:'<ellipse class="paint" data-part="cloud1" cx="90" cy="52" rx="48" ry="22" fill="#fff"/><ellipse class="paint" data-part="cloud2" cx="318" cy="76" rx="43" ry="19" fill="#fff"/>'},
+ {name:'별빛',badge:'⭐',markup:'<path class="paint" data-part="star1" d="M65 25L76 51L103 54L82 72L89 98L65 84L41 98L48 72L27 54L54 51Z" fill="#fff"/><path class="paint" data-part="star2" d="M332 22L341 43L364 46L347 61L352 83L332 72L312 83L317 61L300 46L323 43Z" fill="#fff"/>'},
+ {name:'꽃밭',badge:'🌼',markup:'<circle class="paint" data-part="flower1" cx="57" cy="310" r="23" fill="#fff"/><circle class="paint" data-part="flower2" cx="338" cy="310" r="23" fill="#fff"/><path class="line" d="M57 333V356M338 333V356"/>'},
+ {name:'풍선',badge:'🎈',markup:'<ellipse class="paint" data-part="balloon1" cx="58" cy="64" rx="27" ry="40" fill="#fff"/><ellipse class="paint" data-part="balloon2" cx="344" cy="64" rx="27" ry="40" fill="#fff"/><path class="line" d="M58 105Q45 140 59 170M344 105Q356 140 344 170"/>'}
+];
+const sceneKeys=[];
+for(const [base,label] of sceneBases){
+ for(let i=0;i<sceneStyles.length;i++){
+  const scene=sceneStyles[i],key='scene_'+base+'_'+i;
+  const main=shapes[base].replace(/data-part="([^"]+)"/g,'data-part="main_$1"');
+  const reduced='<g transform="translate(35 38) scale(.82)">'+main+'</g>';
+  shapes[key]=reduced+'<g class="moving bounce">'+scene.markup+'</g>';
+  paints[key]={};sceneKeys.push([key,scene.badge+' '+label+' '+scene.name]);
+ }
+}
 const songs=[
 {name:'🎵 반짝 산책',category:'동요풍',bpm:330,notes:[262,330,392,330,349,294,262,0,294,349,440,349,392,330,262,0]},
 {name:'🐰 토끼 발걸음',category:'동요풍',bpm:260,notes:[392,392,440,392,330,330,294,0,349,349,392,349,294,262,262,0]},
@@ -47,12 +75,28 @@ const songs=[
 {name:'☁️ 구름 위 산책',category:'집중 배경음',bpm:1000,notes:[262,330,392,523,392,330,294,349],ambient:true},
 {name:'🌙 조용한 별빛',category:'집중 배경음',bpm:1300,notes:[220,330,440,330,247,370,494,370],ambient:true},
 {name:'🌿 숲속 쉼표',category:'집중 배경음',bpm:1100,notes:[196,294,392,294,220,330,440,330],ambient:true}
-];function render(){const svg=$('art');svg.innerHTML=shapes[kind]+'<g id="drawLayer" pointer-events="none"></g><g id="outlineLayer" pointer-events="none"></g>';restoreLines();svg.querySelectorAll('.paint').forEach(el=>{const part=el.dataset.part;if(paints[kind][part])el.setAttribute('fill',paints[kind][part])});const overlay=$('outlineLayer');const outline=document.createElementNS('http://www.w3.org/2000/svg','g');outline.innerHTML=shapes[kind];outline.querySelectorAll('.paint').forEach(el=>{el.setAttribute('fill','none');el.style.fill='none';el.style.pointerEvents='none'});outline.querySelectorAll('*').forEach(el=>el.style.pointerEvents='none');overlay.appendChild(outline);$('canvasbox').classList.remove('playing');$('animate').textContent='▶ 움직여!';document.querySelectorAll('[data-art]').forEach(btn=>btn.classList.toggle('selected',btn.dataset.art===kind));const current=document.querySelector('[data-art="'+kind+'"]');if(current)$('pictureName').textContent=current.textContent;if(typeof drawMode!=='undefined')modeUI()}
+ ];
+const extraTunes=[
+['🐣 아침 인사',[262,294,330,392,330,294,262,0,330,349,392,440,392,330,262,0]],
+['🦕 공룡 행진',[196,262,294,330,294,262,196,0,220,294,330,392,330,294,220,0]],
+['🚀 우주 탐험',[262,392,523,494,440,392,330,294,262,330,440,523,587,523,392,0]],
+['🐟 바닷속 친구',[294,349,392,349,294,262,294,0,349,440,392,349,330,294,262,0]],
+['🌼 꽃밭 춤',[330,392,440,523,440,392,330,0,349,392,494,523,494,392,349,0]],
+['🎈 풍선 여행',[262,330,392,440,392,330,294,262,330,392,523,440,392,330,262,0]],
+['🐻 곰의 소풍',[220,262,294,330,294,262,220,0,247,294,330,392,330,294,247,0]],
+['⭐ 별빛 자장가',[262,330,392,330,294,349,440,349],true],
+['🌧️ 빗방울 산책',[294,392,440,392,330,392,494,392],true],
+['🌲 숲속 아침',[196,262,330,392,220,294,349,440],true],
+['🌊 잔잔한 바다',[220,330,392,330,247,370,440,370],true],
+['☁️ 낮잠 구름',[262,349,440,349,294,392,494,392],true]
+];
+for(const [name,notes,ambient] of extraTunes)songs.push({name,category:ambient?'집중 배경음':'창작 동요풍',bpm:ambient?1150:320,notes,ambient:!!ambient});
+function render(){const svg=$('art');svg.innerHTML=shapes[kind]+'<g id="drawLayer" pointer-events="none"></g><g id="outlineLayer" pointer-events="none"></g>';restoreLines();svg.querySelectorAll('.paint').forEach(el=>{const part=el.dataset.part;if(paints[kind][part])el.setAttribute('fill',paints[kind][part])});const overlay=$('outlineLayer');const outline=document.createElementNS('http://www.w3.org/2000/svg','g');outline.innerHTML=shapes[kind];outline.querySelectorAll('.paint').forEach(el=>{el.setAttribute('fill','none');el.style.fill='none';el.style.pointerEvents='none'});outline.querySelectorAll('*').forEach(el=>el.style.pointerEvents='none');overlay.appendChild(outline);$('canvasbox').classList.remove('playing');$('animate').textContent='▶ 움직여!';document.querySelectorAll('[data-art]').forEach(btn=>btn.classList.toggle('selected',btn.dataset.art===kind));const current=document.querySelector('[data-art="'+kind+'"]');if(current)$('pictureName').textContent=current.textContent;if(typeof drawMode!=='undefined')modeUI()}
 function palette(){colors.forEach(c=>{const b=document.createElement('button');b.className='color'+(color===c?' selected':'');b.style.background=c;b.setAttribute('aria-label','색상 선택');b.onclick=()=>{color=c;document.querySelectorAll('.color').forEach(x=>x.classList.remove('selected'));b.classList.add('selected')};$('palette').appendChild(b)})}palette();document.querySelector('.choose').onclick=e=>{const b=e.target.closest('[data-art]');if(b){kind=b.dataset.art;history=[];render();if(typeof courseActive!=='undefined'&&courseActive)closeCourse()}};$('art').addEventListener('click',e=>{const el=e.target.closest('.paint');if(!el)return;if(drawMode)return;const part=el.dataset.part;history.push({kind,part,old:paints[kind][part]});paints[kind][part]=color;el.setAttribute('fill',color);$('message').textContent='우와! 정말 예쁘다! 🌟'});$('undo').onclick=()=>{if(drawMode&&strokes[kind].length){strokes[kind].pop();render();return}const h=history.pop();if(!h)return;paints[h.kind][h.part]=h.old;if(kind===h.kind)render()};$('clear').onclick=()=>{paints[kind]={};strokes[kind]=[];history=[];render();$('message').textContent='새 그림을 색칠해 보자!'};$('animate').onclick=()=>{const active=$('canvasbox').classList.toggle('playing');$('animate').textContent=active?'⏸ 멈추기':'▶ 움직여!';$('message').textContent=active?'내 그림이 움직여요! 🎉':'색칠하고 또 움직여 보자!'};let musicVolume=.32;function tone(freq,time,ambient=false,voice='lead',length=null){if(!freq||!ctx)return;const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type=ambient?'sine':voice==='bass'?'sine':voice==='harmony'?'sine':'triangle';osc.frequency.value=freq;const duration=length||(ambient?1.7:voice==='bass'?.68:.28);const peak=(ambient?.023:voice==='bass'?.035:voice==='harmony'?.025:.085)*musicVolume;gain.gain.setValueAtTime(.0001,time);gain.gain.linearRampToValueAtTime(peak,time+(ambient?.35:.025));gain.gain.exponentialRampToValueAtTime(.0001,time+duration);osc.connect(gain).connect(ctx.destination);osc.start(time);osc.stop(time+duration+.02)}function tick(){if(!playing||!ctx)return;const track=songs[song],n=step%track.notes.length,t=ctx.currentTime+.035;const root=track.ambient?track.notes[Math.floor(step/4)*4%track.notes.length]:[262,220,196,247][Math.floor(step/4)%4];tone(track.notes[n],t,!!track.ambient);if(step%4===0){tone(root/2,t,!!track.ambient,'bass',track.ambient?2.4:.8);tone(root*1.5,t+.04,!!track.ambient,'harmony',track.ambient?2.1:.7)}if(!track.ambient&&step%2===0){tone(root*2,t+.12,false,'harmony',.13)}step++}function stop(){playing=false;clearInterval(notesTimer);notesTimer=null;$('playMusic').textContent='▶ 음악'}function start(){try{ctx=ctx||new(window.AudioContext||window.webkitAudioContext)();ctx.resume();playing=true;step=0;tick();notesTimer=setInterval(tick,songs[song].bpm);$('playMusic').textContent='⏸ 음악'}catch{$('message').textContent='이 기기에서 음악을 재생할 수 없어요.'}}$('playMusic').onclick=()=>playing?stop():start();function switchSong(d){const was=playing;stop();song=(song+d+songs.length)%songs.length;$('songName').textContent=songs[song].name;$('musicCategory').textContent=songs[song].category;if(was)start()}$('prevSong').onclick=()=>switchSong(-1);$('nextSong').onclick=()=>switchSong(1);window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvent=e});$('install').onclick=async()=>{if(installEvent){installEvent.prompt();installEvent=null}else alert('브라우저 메뉴에서 홈 화면에 추가를 선택해 주세요. 삼성 인터넷: 메뉴 → 현재 페이지 추가 → 홈 화면')};document.addEventListener('visibilitychange',()=>{if(document.hidden)stop()});
 
 // Finger and S Pen free drawing: SVG paths keep coordinates aligned on every screen.
 let drawMode=false,activePointer=null,activeStroke=null;
-const strokes={rabbit:[],butterfly:[],car:[],train:[],bus:[],firetruck:[],airplane:[]};for(const [key] of moreArt)strokes[key]=[];
+const strokes={rabbit:[],butterfly:[],car:[],train:[],bus:[],firetruck:[],airplane:[]};for(const [key] of moreArt)strokes[key]=[];for(const [key] of sceneKeys)strokes[key]=[];
 function restoreLines(){const layer=$('drawLayer');if(!layer)return;layer.innerHTML='';for(const stroke of strokes[kind]){const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',stroke.d);path.setAttribute('fill','none');path.setAttribute('stroke',stroke.color);path.setAttribute('stroke-width','13');path.setAttribute('stroke-linecap','round');path.setAttribute('stroke-linejoin','round');layer.appendChild(path)}}
 function modeUI(){document.querySelectorAll('[data-mode]').forEach(b=>{b.classList.toggle('selected',b.dataset.mode===(drawMode?'draw':'fill'))});$('art').style.touchAction=drawMode?'none':'manipulation';$('message').textContent=drawMode?'손가락으로 쓱쓱 색칠해 봐! 🖍️':'그림을 콕 누르면 색이 채워져! 🪣'}
 document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{drawMode=b.dataset.mode==='draw';render();modeUI()});
@@ -94,7 +138,7 @@ $('musicVolume').addEventListener('input',e=>{musicVolume=Number(e.target.value)
 $('musicCategory').textContent=songs[song].category;
 
 // Simple next/previous picture controls within reach of the coloring area.
-const pictureOrder=['rabbit','butterfly','car','train','bus','firetruck','airplane',...moreArt.map(x=>x[0])];function changePicture(delta){const i=pictureOrder.indexOf(kind);kind=pictureOrder[(i+delta+pictureOrder.length)%pictureOrder.length];history=[];render();modeUI()}
+const pictureOrder=['rabbit','butterfly','car','train','bus','firetruck','airplane',...moreArt.map(x=>x[0]),...sceneKeys.map(x=>x[0])];function changePicture(delta){const i=pictureOrder.indexOf(kind);kind=pictureOrder[(i+delta+pictureOrder.length)%pictureOrder.length];history=[];render();modeUI()}
 $('prevArt').onclick=()=>changePicture(-1);$('nextArt').onclick=()=>changePicture(1);
 
 /* Guided prewriting course: road tracing -> coloring -> movement -> Hangul tracing.
