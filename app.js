@@ -129,7 +129,7 @@ function questionBank(){
  ];
 }
 function newQuestion(){const bank=questionBank();currentQuestion=bank[questionNumber%bank.length];questionNumber++;$('learningTitle').textContent=age===3?'🐣 색깔·그림 놀이':age===5?'🌱 숫자·모양 놀이':'⭐ 생각하는 놀이';$('learningPrompt').textContent=currentQuestion.prompt;$('learningResult').textContent='';const choices=[...currentQuestion.choices];const rotation=questionNumber%choices.length;choices.push(...choices.splice(0,rotation));$('learningChoices').innerHTML='';for(const answer of choices){const b=document.createElement('button');b.textContent=answer;b.onclick=()=>{if(answer===currentQuestion.answer){$('learningResult').textContent='정답! 참 잘했어! 🎉';$('message').textContent='최고야! 🌟'}else{$('learningResult').textContent='다시 한번 골라볼까? 💛'}};$('learningChoices').appendChild(b)}}
-document.querySelectorAll('[data-age]').forEach(b=>b.onclick=()=>{age=Number(b.dataset.age);questionNumber=0;try{localStorage.setItem('gongbu_age',String(age))}catch{}document.querySelectorAll('[data-age]').forEach(x=>x.classList.toggle('selected',Number(x.dataset.age)===age));newQuestion()});
+document.querySelectorAll('[data-age]').forEach(b=>b.onclick=()=>{age=Number(b.dataset.age);questionNumber=0;if(typeof courseActive!=='undefined'&&courseActive){coursePhase=0;courseShow()}try{localStorage.setItem('gongbu_age',String(age))}catch{}document.querySelectorAll('[data-age]').forEach(x=>x.classList.toggle('selected',Number(x.dataset.age)===age));newQuestion()});
 document.querySelectorAll('[data-age]').forEach(x=>x.classList.toggle('selected',Number(x.dataset.age)===age));
 $('newQuestion').onclick=newQuestion;newQuestion();
 
@@ -153,34 +153,41 @@ const coursePaths={
 function courseSvgBase(){return $('courseSvg')}
 function courseText(){return courseWords[courseKind]}
 function closeCourse(){courseActive=false;$('courseStatus').hidden=true;$('courseControls').hidden=true;$('courseOverlay').hidden=true;$('startCourse').textContent='✏️ 따라 배우기';$('message').textContent='다른 그림도 색칠해 보자!'}
+const courseMissions={
+ 3:[['선 따라가기','M45 190H355'],['동그라미','M200 90A100 100 0 1 1 199.9 90'],['물결선','M35 180Q110 75 200 180T365 180'],['그림 색칠하기',null],['움직여 보기',null]],
+ 5:[['지그재그 선','M35 265L100 100L165 265L230 100L295 265L365 100'],['세모 따라가기','M200 70L345 300H55Z'],['네모 따라가기','M90 85H310V290H90Z'],['숫자 따라 쓰기','5'],['그림 색칠하기',null],['움직여 보기',null]],
+ 6:[['복잡한 길','M30 285C80 40 160 320 200 160S320 50 370 275'],['숫자 따라 쓰기','12'],['한글 따라 쓰기','기차'],['한글 따라 쓰기','자동차'],['그림 색칠하기',null],['움직여 보기',null]]
+};
+function missionList(){return courseMissions[age]||courseMissions[3]}
+function currentMission(){return missionList()[coursePhase]||missionList()[0]}
+function drawTraceText(svg,word){const letters=[...word],size=letters.length>2?80:116,start=letters.length>2?36:90;letters.forEach((letter,i)=>{const t=document.createElementNS('http://www.w3.org/2000/svg','text');t.textContent=letter;t.setAttribute('x',String(start+i*(size+4)));t.setAttribute('y','225');t.setAttribute('font-size',String(size));t.setAttribute('font-weight','900');t.setAttribute('fill','#fff');t.setAttribute('stroke','#9db5cf');t.setAttribute('stroke-width','2.3');t.setAttribute('stroke-dasharray','5 4');t.setAttribute('paint-order','stroke');svg.appendChild(t)})}
 function courseDrawGuide(){
  const svg=courseSvgBase();svg.innerHTML='';courseStroke=null;
- if(coursePhase===0){
- const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',coursePaths[courseKind]);path.setAttribute('stroke','#f6c45e');path.setAttribute('stroke-width','36');path.setAttribute('fill','none');path.setAttribute('stroke-linecap','round');svg.appendChild(path);
- const dashed=path.cloneNode();dashed.setAttribute('stroke','#fff');dashed.setAttribute('stroke-width','5');dashed.setAttribute('stroke-dasharray','12 12');svg.appendChild(dashed);
- svg.insertAdjacentHTML('beforeend','<text x="30" y="230" font-size="34">🏁</text><text x="340" y="125" font-size="34">⭐</text>');
- $('courseHint').textContent=courseKind==='train'?'🚂 손가락이나 펜으로 기찻길을 따라가요!':'🚗 자동차가 가는 길을 따라가요!';
- }else if(coursePhase===3){
- const word=courseText();const letters=[...word];const size=letters.length===2?118:90;const start=letters.length===2?80:45;
- letters.forEach((letter,i)=>{const t=document.createElementNS('http://www.w3.org/2000/svg','text');t.textContent=letter;t.setAttribute('x',String(start+i*(size+4)));t.setAttribute('y','224');t.setAttribute('font-size',String(size));t.setAttribute('font-weight','900');t.setAttribute('fill','#fff');t.setAttribute('stroke','#9db5cf');t.setAttribute('stroke-width','2.3');t.setAttribute('stroke-dasharray','5 4');t.setAttribute('paint-order','stroke');svg.appendChild(t)});
- $('courseHint').textContent='✏️ '+word+' — 큰 글자를 따라 써 봐요!';
- }
+ const [title,guide]=currentMission();
+ if(guide&&guide.startsWith('M')){
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',guide);path.setAttribute('stroke','#f6c45e');path.setAttribute('stroke-width',age===3?'32':'23');path.setAttribute('fill','none');path.setAttribute('stroke-linecap','round');path.setAttribute('stroke-linejoin','round');svg.appendChild(path);
+  const dashed=path.cloneNode();dashed.setAttribute('stroke','#fff');dashed.setAttribute('stroke-width','5');dashed.setAttribute('stroke-dasharray','10 12');svg.appendChild(dashed);
+ }else if(guide)drawTraceText(svg,guide);
+ $('courseHint').textContent='✏️ '+title+' — 손가락으로 천천히 따라 그려요!';
 }
 function courseShow(){
- $('courseStatus').hidden=false;$('courseControls').hidden=false;$('courseTitle').textContent=courseKind==='train'?'🚂 기차 놀이':'🚗 자동차 놀이';$('courseStep').textContent=(coursePhase+1)+' / 4 · '+courseLabels[coursePhase];
- $('courseNext').textContent=coursePhase===3?'🎉 완료':'다음 단계 ▶';
- $('courseOverlay').hidden=coursePhase===0||coursePhase===3;
- if(!$('courseOverlay').hidden)courseDrawGuide();
- if(coursePhase===1){$('courseOverlay').hidden=true;$('courseHint').textContent='';drawMode=false;modeUI();$('message').textContent='🎨 기차나 자동차를 원하는 색으로 칠해요!'}
- if(coursePhase===2){$('courseOverlay').hidden=true;$('canvasbox').classList.add('playing');$('animate').textContent='⏸ 멈추기';$('message').textContent='🎉 그림이 움직여요!'}
- if(coursePhase===0||coursePhase===3){$('courseOverlay').hidden=false;$('canvasbox').classList.remove('playing');courseDrawGuide();$('message').textContent='선을 따라 그려봐요!'}
+ const [title]=currentMission();$('courseStatus').hidden=false;$('courseControls').hidden=false;
+ $('courseTitle').textContent=age+'세 · '+(courseKind==='train'?'🚂 기차':'🚗 자동차')+' 학습';
+ $('courseStep').textContent=(coursePhase+1)+' / '+missionList().length+' · '+title;
+ $('courseNext').textContent=coursePhase===missionList().length-1?'🎉 완료':'다음 단계 ▶';
+ const coloring=title==='그림 색칠하기',moving=title==='움직여 보기';
+ $('courseOverlay').hidden=coloring||moving;
+ $('canvasbox').classList.remove('playing');$('animate').textContent='▶ 움직여!';
+ if(coloring){drawMode=false;modeUI();$('message').textContent='🎨 좋아하는 색을 골라 그림을 칠해요!'}
+ else if(moving){$('canvasbox').classList.add('playing');$('animate').textContent='⏸ 멈추기';$('message').textContent='🎉 내가 색칠한 그림이 움직여요!'}
+ else{courseDrawGuide();$('message').textContent='✏️ '+title+'를 따라 해 봐요!'}
 }
 function beginCourse(){try{courseKind=kind==='car'?'car':'train';if(kind!==courseKind){kind=courseKind;render()}courseActive=true;coursePhase=0;$('startCourse').textContent='✏️ 학습 중';$('courseStatus').hidden=false;$('courseOverlay').hidden=false;$('courseControls').hidden=false;courseShow();$('message').textContent='🚂 첫 번째 미션! 길을 따라 선을 그려봐요.'}catch(err){console.error('Course start failed',err);$('message').textContent='학습 화면을 여는 중 문제가 생겼어요.'}}
 $('startCourse').addEventListener('click',beginCourse);$('closeCourse').onclick=closeCourse;
-$('courseNext').onclick=()=>{if(!courseActive)return;if(coursePhase===3){closeCourse();$('message').textContent='🌟 모든 놀이를 끝냈어요! 정말 잘했어요!';return}coursePhase++;courseShow()};
-$('courseRetry').onclick=()=>{if(coursePhase===1){paints[kind]={};strokes[kind]=[];render()}if(coursePhase===2){$('canvasbox').classList.remove('playing')}courseShow()};
+$('courseNext').onclick=()=>{if(!courseActive)return;if(coursePhase===missionList().length-1){closeCourse();$('message').textContent='🌟 모든 놀이를 끝냈어요! 정말 잘했어요!';return}coursePhase++;courseShow()};
+$('courseRetry').onclick=()=>{if(currentMission()[0]==='그림 색칠하기'){paints[kind]={};strokes[kind]=[];render()}if(currentMission()[0]==='움직여 보기'){$('canvasbox').classList.remove('playing')}courseShow()};
 function coursePoint(e){const svg=courseSvgBase();const rect=svg.getBoundingClientRect();if(!rect.width||!rect.height)return null;const x=(e.clientX-rect.left)*400/rect.width,y=(e.clientY-rect.top)*360/rect.height;return{x:Math.max(0,Math.min(400,x)),y:Math.max(0,Math.min(360,y))}}
-function coursePaint(e,first){if(!courseActive||!(coursePhase===0||coursePhase===3))return;const p=coursePoint(e);if(!p)return;e.preventDefault();if(first){courseStroke=document.createElementNS('http://www.w3.org/2000/svg','path');courseStroke.setAttribute('fill','none');courseStroke.setAttribute('stroke','#568fe2');courseStroke.setAttribute('stroke-width','12');courseStroke.setAttribute('stroke-linecap','round');courseStroke.setAttribute('stroke-linejoin','round');courseStroke.setAttribute('d','M'+p.x+' '+p.y);courseSvgBase().appendChild(courseStroke)}else if(courseStroke){courseStroke.setAttribute('d',courseStroke.getAttribute('d')+' L'+p.x+' '+p.y)}}
+function coursePaint(e,first){if(!courseActive||$('courseOverlay').hidden)return;const p=coursePoint(e);if(!p)return;e.preventDefault();if(first){courseStroke=document.createElementNS('http://www.w3.org/2000/svg','path');courseStroke.setAttribute('fill','none');courseStroke.setAttribute('stroke','#568fe2');courseStroke.setAttribute('stroke-width','12');courseStroke.setAttribute('stroke-linecap','round');courseStroke.setAttribute('stroke-linejoin','round');courseStroke.setAttribute('d','M'+p.x+' '+p.y);courseSvgBase().appendChild(courseStroke)}else if(courseStroke){courseStroke.setAttribute('d',courseStroke.getAttribute('d')+' L'+p.x+' '+p.y)}}
 $('courseSvg').addEventListener('pointerdown',e=>{coursePointer=e.pointerId;coursePaint(e,true);$('courseSvg').setPointerCapture(e.pointerId)});
 $('courseSvg').addEventListener('pointermove',e=>{if(coursePointer===e.pointerId)coursePaint(e,false)});
 for(const event of ['pointerup','pointercancel'])$('courseSvg').addEventListener(event,e=>{if(coursePointer===e.pointerId){coursePointer=null;courseStroke=null}});
