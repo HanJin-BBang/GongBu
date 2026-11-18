@@ -100,8 +100,8 @@ function courseShow(){
  if(coursePhase===2){$('courseOverlay').hidden=true;$('canvasbox').classList.add('playing');$('animate').textContent='⏸ 멈추기';$('message').textContent='🎉 그림이 움직여요!'}
  if(coursePhase===0||coursePhase===3){$('courseOverlay').hidden=false;$('canvasbox').classList.remove('playing');courseDrawGuide();$('message').textContent='선을 따라 그려봐요!'}
 }
-function beginCourse(){courseKind=kind==='car'?'car':'train';if(kind!==courseKind){kind=courseKind;render()}courseActive=true;coursePhase=0;$('startCourse').textContent='✏️ 학습 중';courseShow()}
-$('startCourse').onclick=beginCourse;$('closeCourse').onclick=closeCourse;
+function beginCourse(){courseKind=kind==='car'?'car':'train';if(kind!==courseKind){kind=courseKind;render()}courseActive=true;coursePhase=0;$('startCourse').textContent='✏️ 학습 중';$('courseStatus').hidden=false;$('courseOverlay').hidden=false;$('courseControls').hidden=false;courseShow();$('message').textContent='🚂 첫 번째 미션! 길을 따라 선을 그려봐요.'}
+$('startCourse').addEventListener('click',beginCourse);$('closeCourse').onclick=closeCourse;
 $('courseNext').onclick=()=>{if(!courseActive)return;if(coursePhase===3){closeCourse();$('message').textContent='🌟 모든 놀이를 끝냈어요! 정말 잘했어요!';return}coursePhase++;courseShow()};
 $('courseRetry').onclick=()=>{if(coursePhase===1){paints[kind]={};strokes[kind]=[];render()}if(coursePhase===2){$('canvasbox').classList.remove('playing')}courseShow()};
 function coursePoint(e){const svg=courseSvgBase();const rect=svg.getBoundingClientRect();if(!rect.width||!rect.height)return null;const x=(e.clientX-rect.left)*400/rect.width,y=(e.clientY-rect.top)*360/rect.height;return{x:Math.max(0,Math.min(400,x)),y:Math.max(0,Math.min(360,y))}}
@@ -109,3 +109,6 @@ function coursePaint(e,first){if(!courseActive||!(coursePhase===0||coursePhase==
 $('courseSvg').addEventListener('pointerdown',e=>{coursePointer=e.pointerId;coursePaint(e,true);$('courseSvg').setPointerCapture(e.pointerId)});
 $('courseSvg').addEventListener('pointermove',e=>{if(coursePointer===e.pointerId)coursePaint(e,false)});
 for(const event of ['pointerup','pointercancel'])$('courseSvg').addEventListener(event,e=>{if(coursePointer===e.pointerId){coursePointer=null;courseStroke=null}});
+
+// Make the course entry resilient to taps on nested elements and PWA updates.
+document.querySelector('.right-panel').addEventListener('click',e=>{if(e.target.closest('#startCourse')&&!courseActive){beginCourse()}});
