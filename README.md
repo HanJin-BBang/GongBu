@@ -1,0 +1,1 @@
+# 공부 놀이터 🌈\n\n광고 없는 유아용 색칠·애니메이션·창작 멜로디 PWA. 토끼·나비·자동차를 색칠하고 움직일 수 있습니다. 음악은 이 앱을 위해 직접 작성한 간단한 오리지널 멜로디입니다.\n\nGitHub Pages: Settings → Pages → Deploy from a branch → main / (root).\n\n외부 콘텐츠·광고·분석 추적 없음. QR/음원 외부 요청 없음.
