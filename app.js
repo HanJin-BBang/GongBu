@@ -281,7 +281,7 @@ function showLibrary(){
  readingStories.forEach((story,index)=>{
   if(selectedReadingCategory!=='전체'&&story.category!==selectedReadingCategory)return;
   const btn=document.createElement('button');btn.type='button';btn.className='book-cover';
-  const illustration=document.createElement('span');illustration.className='book-illustration';illustration.textContent=story.icon;
+  const illustration=document.createElement('span');illustration.className='cover-art';illustration.textContent=story.icon;
   const title=document.createElement('strong');title.textContent=story.title;
   const meta=document.createElement('small');meta.textContent=story.category+' · 5장';
   btn.append(illustration,title,meta);
