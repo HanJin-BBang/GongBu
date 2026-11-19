@@ -197,3 +197,19 @@ for(const event of ['pointerup','pointercancel'])$('courseSvg').addEventListener
 
 // Open the quiz from the mobile toolbar without covering the age buttons.
 const mobileQuiz=document.getElementById('mobileQuiz');if(mobileQuiz)mobileQuiz.addEventListener('click',()=>{const details=document.querySelector('.learn-details');details.open=!details.open;mobileQuiz.textContent=details.open?'✕ 문제 닫기':'🧠 문제 놀이'});
+
+/* Home navigation: keep the existing coloring engine isolated and reusable. */
+const playHub=document.getElementById('playHub'),playLayout=document.getElementById('playLayout');
+function enterPlay(mode){
+ playHub.hidden=true;playLayout.hidden=false;
+ document.getElementById('homeHub').textContent='⌂ 놀이 선택';
+ if(mode==='study'){
+   beginCourse();
+ }else if(courseActive){closeCourse()}
+}
+document.getElementById('chooseImagine').addEventListener('click',()=>enterPlay('imagine'));
+document.getElementById('chooseStudy').addEventListener('click',()=>enterPlay('study'));
+document.getElementById('homeHub').addEventListener('click',()=>{
+ if(courseActive)closeCourse();
+ playLayout.hidden=true;playHub.hidden=false;
+});
