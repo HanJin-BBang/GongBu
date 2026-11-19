@@ -213,3 +213,6 @@ document.getElementById('homeHub').addEventListener('click',()=>{
  if(courseActive)closeCourse();
  playLayout.hidden=true;playHub.hidden=false;
 });
+
+// Installation QR dialog
+const qrDialog=document.getElementById('qrDialog');document.getElementById('showQr').addEventListener('click',()=>{qrDialog.hidden=false});document.getElementById('closeQr').addEventListener('click',()=>{qrDialog.hidden=true});qrDialog.addEventListener('click',e=>{if(e.target===qrDialog)qrDialog.hidden=true});
