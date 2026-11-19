@@ -201,7 +201,7 @@ const mobileQuiz=document.getElementById('mobileQuiz');if(mobileQuiz)mobileQuiz.
 /* Home navigation: keep the existing coloring engine isolated and reusable. */
 const playHub=document.getElementById('playHub'),playLayout=document.getElementById('playLayout');
 function enterPlay(mode){
- playHub.hidden=true;playLayout.hidden=false;
+ stopReading();readingLayout.hidden=true;playHub.hidden=true;playLayout.hidden=false;
  document.getElementById('homeHub').textContent='⌂ 놀이 선택';
  if(mode==='study'){
    beginCourse();
@@ -216,3 +216,62 @@ document.getElementById('homeHub').addEventListener('click',()=>{
 
 // Installation QR dialog
 const qrDialog=document.getElementById('qrDialog');document.getElementById('showQr').addEventListener('click',()=>{qrDialog.hidden=false});document.getElementById('closeQr').addEventListener('click',()=>{qrDialog.hidden=true});qrDialog.addEventListener('click',e=>{if(e.target===qrDialog)qrDialog.hidden=true});
+
+/* Original illustrated read-aloud stories, graded for preschool ages. */
+const readingStories=[
+ {category:'동물',icon:'🐰',title:'토끼의 당근',pages:[['🐰','토끼가 아침에 일어났어요.'],['🥕','주황색 당근을 찾았어요.'],['🐰🥕','아삭아삭! 정말 맛있어요.']]},
+ {category:'동물',icon:'🐻',title:'곰의 소풍',pages:[['🐻','곰이 작은 가방을 메었어요.'],['🌳','푸른 숲으로 소풍을 갔어요.'],['🍎','친구들과 사과를 나누어 먹었어요.']]},
+ {category:'동물',icon:'🐢',title:'천천히 거북이',pages:[['🐢','거북이는 천천히 걸어요.'],['🌼','길가의 예쁜 꽃을 보았어요.'],['🏡','서두르지 않고 집에 도착했어요.']]},
+ {category:'탈것',icon:'🚂',title:'칙칙폭폭 기차',pages:[['🚂','칙칙폭폭! 기차가 출발해요.'],['🌉','긴 다리를 지나가요.'],['🚉','친구들이 기다리는 역에 도착했어요.']]},
+ {category:'탈것',icon:'🚒',title:'용감한 소방차',pages:[['🚒','빨간 소방차가 출동해요.'],['🚨','삐뽀삐뽀! 길을 비켜 주세요.'],['👩‍🚒','소방관이 모두를 안전하게 도왔어요.']]},
+ {category:'탈것',icon:'🚀',title:'달나라 여행',pages:[['🚀','로켓이 하늘 높이 날아올랐어요.'],['🌙','둥근 달이 점점 가까워졌어요.'],['⭐','반짝이는 별들이 인사했어요.']]},
+ {category:'자연',icon:'🌱',title:'작은 씨앗',pages:[['🌰','작은 씨앗 하나가 흙 속에 잠들었어요.'],['🌧️','비가 촉촉하게 내려왔어요.'],['🌻','햇빛을 받고 예쁜 꽃으로 자랐어요.']]},
+ {category:'자연',icon:'☁️',title:'구름의 모양',pages:[['☁️','하얀 구름이 하늘에 둥둥 떠요.'],['🐑','어느새 양처럼 보였어요.'],['🐘','이번에는 커다란 코끼리 같아요.']]},
+ {category:'생활',icon:'🧸',title:'장난감 정리',pages:[['🧸','재미있게 장난감을 가지고 놀았어요.'],['🧺','곰 인형과 블록을 바구니에 넣어요.'],['✨','방이 깨끗해져서 기분이 좋아요.']]},
+ {category:'생활',icon:'🤝',title:'함께 나누기',pages:[['🍪','과자가 두 개 있어요.'],['👧👦','친구가 옆에 다가왔어요.'],['🤝','하나씩 나누니 둘 다 웃었어요.']]},
+ {category:'모험',icon:'🦕',title:'공룡 친구',pages:[['🥚','숲속에서 큰 알을 발견했어요.'],['🦕','알에서 아기 공룡이 나왔어요.'],['🌿','아기 공룡과 신나게 숲을 걸었어요.']]},
+ {category:'모험',icon:'🐟',title:'바닷속 보물',pages:[['🐟','작은 물고기가 바다를 헤엄쳐요.'],['🐚','반짝이는 조개를 발견했어요.'],['🐠','친구들에게 보물을 보여 주었어요.']]}
+];
+let readingAge=3,readingIndex=0,readingPage=0,readingPlaying=false;
+const readingLayout=document.getElementById('readingLayout');
+function stopReading(){readingPlaying=false;if('speechSynthesis' in window)window.speechSynthesis.cancel()}
+function readText(){
+ stopReading();
+ if(!('speechSynthesis' in window)){document.getElementById('readingSpeak').textContent='🔇 음성 미지원';return}
+ const story=readingStories[readingIndex],page=story.pages[readingPage];
+ let text=page[1];
+ if(readingAge===5)text+=' '+(readingPage===story.pages.length-1?'이야기가 끝났어요.':'다음에는 어떤 일이 생길까요?');
+ if(readingAge===6)text+=' '+(readingPage===story.pages.length-1?'이 이야기에서 가장 재미있었던 장면은 무엇인가요?':'장면을 상상하며 들어 보세요.');
+ const utterance=new SpeechSynthesisUtterance(text);utterance.lang='ko-KR';utterance.rate=readingAge===3?.78:readingAge===5?.87:.95;utterance.pitch=1.08;
+ readingPlaying=true;utterance.onend=()=>{readingPlaying=false};utterance.onerror=()=>{readingPlaying=false};
+ window.speechSynthesis.speak(utterance);
+}
+function showReading(speak=false){
+ const story=readingStories[readingIndex],page=story.pages[readingPage];
+ document.getElementById('readingPicture').textContent=page[0];
+ document.getElementById('readingTitle').textContent=story.title;
+ document.getElementById('readingCount').textContent=(readingIndex+1)+' / '+readingStories.length+'권 · '+(readingPage+1)+' / '+story.pages.length+'쪽';
+ document.getElementById('readingText').textContent=page[1];
+ document.querySelectorAll('[data-read-age]').forEach(b=>b.classList.toggle('selected',Number(b.dataset.readAge)===readingAge));
+ document.querySelectorAll('[data-read-category]').forEach(b=>b.classList.toggle('selected',b.dataset.readCategory===story.category));
+ if(speak)readText();
+}
+function readingCategoryButtons(){
+ const wrap=document.getElementById('readingCategories');wrap.innerHTML='';
+ for(const category of ['동물','탈것','자연','생활','모험']){
+  const btn=document.createElement('button');btn.textContent=category;btn.dataset.readCategory=category;
+  btn.addEventListener('click',()=>{readingIndex=readingStories.findIndex(s=>s.category===category);readingPage=0;showReading(true)});
+  wrap.appendChild(btn);
+ }
+}
+function enterReading(){
+ stopReading();playHub.hidden=true;playLayout.hidden=true;readingLayout.hidden=false;
+ readingCategoryButtons();showReading(true);
+}
+document.getElementById('chooseReading').addEventListener('click',enterReading);
+document.querySelectorAll('[data-read-age]').forEach(btn=>btn.addEventListener('click',()=>{readingAge=Number(btn.dataset.readAge);showReading(true)}));
+document.getElementById('readingSpeak').addEventListener('click',readText);
+document.getElementById('readingStop').addEventListener('click',stopReading);
+document.getElementById('readingNext').addEventListener('click',()=>{const pages=readingStories[readingIndex].pages.length;if(readingPage<pages-1)readingPage++;else{readingIndex=(readingIndex+1)%readingStories.length;readingPage=0}showReading(true)});
+document.getElementById('readingPrev').addEventListener('click',()=>{if(readingPage>0)readingPage--;else{readingIndex=(readingIndex+readingStories.length-1)%readingStories.length;readingPage=readingStories[readingIndex].pages.length-1}showReading(true)});
+document.getElementById('homeHub').addEventListener('click',()=>{stopReading();readingLayout.hidden=true});
