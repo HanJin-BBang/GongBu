@@ -123,6 +123,8 @@ function questionBank(){
  ...[['동그라미','🔴','🟦','🔺'],['세모','🔺','🔴','🟦'],['네모','🟦','🔺','🔴']].map(x=>({prompt:x[0]+'를 찾아봐!',choices:x.slice(1),answer:x[1]}))
  ];
  return [
+ ...[['ㄱ','기차','나무','토끼'],['ㄴ','나무','기차','바다'],['ㅁ','모자','사과','토끼'],['ㅂ','바다','나무','모자'],['ㅅ','사과','기차','바다'],['ㅌ','토끼','모자','나무']].map(x=>({prompt:'첫소리가 '+x[0]+'인 낱말은?',choices:x.slice(1),answer:x[1]})),
+ ...[['가','ㄱ + ㅏ'],['나','ㄴ + ㅏ'],['다','ㄷ + ㅏ'],['마','ㅁ + ㅏ'],['바','ㅂ + ㅏ'],['사','ㅅ + ㅏ']].map(x=>({prompt:x[1]+' = ?',choices:[x[0],'고','누'],answer:x[0]})),
  ...[1,2,3,4,5].map(n=>({prompt:n+' + 1 = ?',choices:[String(n+1),String(n),String(n+2)],answer:String(n+1)})),
  ...[2,3,4,5,6].map(n=>({prompt:n+' - 1 = ?',choices:[String(n-1),String(n),String(n-2)],answer:String(n-1)})),
  ...objects.map(([k,e,n],i)=>({prompt:e+' 이름은 무엇일까?',choices:[n,objects[(i+2)%7][2],objects[(i+4)%7][2]],answer:n}))
@@ -263,18 +265,37 @@ function showReading(speak=false){
 }
 function readingCategoryButtons(){
  const wrap=document.getElementById('readingCategories');wrap.innerHTML='';
- for(const category of ['동물','탈것','자연','생활','모험']){
+ for(const category of ['전체','동물','탈것','자연','생활','모험']){
   const btn=document.createElement('button');btn.textContent=category;btn.dataset.readCategory=category;
-  btn.addEventListener('click',()=>{readingIndex=readingStories.findIndex(s=>s.category===category);readingPage=0;showReading(true)});
-  wrap.appendChild(btn);
+  btn.addEventListener('click',()=>{selectedReadingCategory=category;showLibrary()});
+  btn.classList.toggle('selected',category===selectedReadingCategory);wrap.appendChild(btn);
  }
+}
+let selectedReadingCategory='전체';
+function showLibrary(){
+ stopReading();
+ document.getElementById('readingLibrary').hidden=false;
+ document.getElementById('readingBook').hidden=true;
+ document.getElementById('readingControls').hidden=true;
+ const shelf=document.getElementById('readingShelf');shelf.replaceChildren();
+ readingStories.forEach((story,index)=>{
+  if(selectedReadingCategory!=='전체'&&story.category!==selectedReadingCategory)return;
+  const btn=document.createElement('button');btn.type='button';btn.className='book-cover';
+  const illustration=document.createElement('span');illustration.className='book-illustration';illustration.textContent=story.icon;
+  const title=document.createElement('strong');title.textContent=story.title;
+  const meta=document.createElement('small');meta.textContent=story.category+' · 5장';
+  btn.append(illustration,title,meta);
+  btn.addEventListener('click',()=>{readingIndex=index;readingPage=0;document.getElementById('readingLibrary').hidden=true;document.getElementById('readingBook').hidden=false;document.getElementById('readingControls').hidden=false;showReading(true)});
+  shelf.appendChild(btn);
+ });
 }
 function enterReading(){
  stopReading();playHub.hidden=true;playLayout.hidden=true;readingLayout.hidden=false;
- readingCategoryButtons();showReading(true);
+ readingCategoryButtons();showLibrary();
 }
 document.getElementById('chooseReading').addEventListener('click',enterReading);
-document.querySelectorAll('[data-read-age]').forEach(btn=>btn.addEventListener('click',()=>{readingAge=Number(btn.dataset.readAge);showReading(true)}));
+document.querySelectorAll('[data-read-age]').forEach(btn=>btn.addEventListener('click',()=>{readingAge=Number(btn.dataset.readAge);if(document.getElementById('readingLibrary').hidden)showReading(true);else showLibrary()}));
+document.getElementById('readingBack').addEventListener('click',showLibrary);
 document.getElementById('readingSpeak').addEventListener('click',readText);
 document.getElementById('readingStop').addEventListener('click',stopReading);
 document.getElementById('readingNext').addEventListener('click',()=>{const pages=readingStories[readingIndex].pages.length;if(readingPage<pages-1)readingPage++;else{readingIndex=(readingIndex+1)%readingStories.length;readingPage=0}showReading(true)});
