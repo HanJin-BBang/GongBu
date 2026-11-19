@@ -280,3 +280,27 @@ document.getElementById('readingStop').addEventListener('click',stopReading);
 document.getElementById('readingNext').addEventListener('click',()=>{const pages=readingStories[readingIndex].pages.length;if(readingPage<pages-1)readingPage++;else{readingIndex=(readingIndex+1)%readingStories.length;readingPage=0}showReading(true)});
 document.getElementById('readingPrev').addEventListener('click',()=>{if(readingPage>0)readingPage--;else{readingIndex=(readingIndex+readingStories.length-1)%readingStories.length;readingPage=readingStories[readingIndex].pages.length-1}showReading(true)});
 document.getElementById('homeHub').addEventListener('click',()=>{stopReading();readingLayout.hidden=true});
+
+/* Install guidance: never force a browser switch or silently redirect. */
+const appUrl='https://hanjin-bbang.github.io/GongBu/';
+const browserHelp=document.getElementById('browserHelp');
+const installHint=document.getElementById('qrInstallHint');
+let pendingAppInstall=null;
+window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();pendingAppInstall=event;installHint.textContent='이 기기에서 앱 설치를 지원해요.'});
+window.addEventListener('appinstalled',()=>{pendingAppInstall=null;browserHelp.hidden=true;installHint.textContent='설치가 완료됐어요! 홈 화면에서 열어 주세요.'});
+function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true}
+function showBrowserHelp(){if(!isStandalone())browserHelp.hidden=false}
+document.getElementById('qrInstall').addEventListener('click',async()=>{
+ if(isStandalone()){installHint.textContent='이미 앱으로 실행 중이에요.';return}
+ if(pendingAppInstall){const prompt=pendingAppInstall;pendingAppInstall=null;await prompt.prompt();return}
+ installHint.textContent='Chrome의 ⋮ 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요. 다른 브라우저라면 주소를 복사해 Chrome에서 열어 주세요.';
+ showBrowserHelp();
+});
+document.getElementById('copyAppUrl').addEventListener('click',async()=>{
+ try{await navigator.clipboard.writeText(appUrl);document.getElementById('copyAppUrl').textContent='✓ 복사됨'}catch(e){window.prompt('아래 주소를 복사하세요',appUrl)}
+});
+document.getElementById('dismissBrowserHelp').addEventListener('click',()=>browserHelp.hidden=true);
+const agent=navigator.userAgent||'';
+if(/Android/i.test(agent)&&!isStandalone()&&!/Chrome\/|CriOS\//i.test(agent)&&!sessionStorage.getItem('browserHelpDismissed')){
+ showBrowserHelp();sessionStorage.setItem('browserHelpDismissed','1');
+}
